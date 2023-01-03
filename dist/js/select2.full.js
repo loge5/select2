@@ -1312,7 +1312,10 @@ S2.define('select2/results',[
             data: data
           });
         } else {
-          self.trigger('close', {});
+          self.trigger('close', {
+            originalEvent: evt,
+            data: data
+          });
         }
 
         return;
@@ -3407,7 +3410,12 @@ S2.define('select2/data/select',[
     });
 
     container.on('unselect', function (params) {
-      self.unselect(params.data);
+      container.$element.find('option').each(function () {
+        if ($(this).val() == params.data.id) {
+          var data = Utils.GetData(this, 'data');
+          self.unselect(data);
+        }
+      });
     });
   };
 
@@ -3751,7 +3759,7 @@ S2.define('select2/data/ajax',[
       }, function () {
         // Attempt to detect if a request was aborted
         // Only works if the transport exposes a status property
-        if ('status' in $request &&
+        if ($request && 'status' in $request &&
             ($request.status === 0 || $request.status === '0')) {
           return;
         }
@@ -4244,8 +4252,6 @@ S2.define('select2/dropdown/search',[
       self.$search.attr('tabindex', 0);
       self.$search.attr('aria-controls', resultsId);
 
-      self.$search.trigger('focus');
-
       window.setTimeout(function () {
         self.$search.trigger('focus');
       }, 0);
@@ -4258,12 +4264,6 @@ S2.define('select2/dropdown/search',[
 
       self.$search.val('');
       self.$search.trigger('blur');
-    });
-
-    container.on('focus', function () {
-      if (!container.isOpen()) {
-        self.$search.trigger('focus');
-      }
     });
 
     container.on('results:all', function (params) {
@@ -6429,7 +6429,7 @@ S2.define('select2/selection/stopPropagation',[
     }
 
     function shouldAdjustOldDeltas(orgEvent, absDelta) {
-        // If this is an older event and the delta is divisible by 120,
+        // If this is an older event and the delta is divisable by 120,
         // then we are assuming that the browser is treating this as an
         // older mouse wheel event and that we should divide the deltas
         // by 40 to try and get a more usable deltaFactor.
